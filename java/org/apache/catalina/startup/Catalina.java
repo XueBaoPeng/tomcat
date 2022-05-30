@@ -550,6 +550,7 @@ public class Catalina {
         initNaming();
 
         // Create and execute our Digester
+        //创建Digester对象用于xml解析，用于解析server.xml配置文件
         Digester digester = createStartDigester();
 
         InputSource inputSource = null;
@@ -615,6 +616,7 @@ public class Catalina {
             try {
                 inputSource.setByteStream(inputStream);
                 digester.push(this);
+                //解析server.xml
                 digester.parse(inputSource);
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +

@@ -783,11 +783,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 getLog().debug(sm.getString("abstractConnectionHandler.process",
                         wrapper.getSocket(), status));
             }
+            //wrapper为空，连接状态设置为关闭
             if (wrapper == null) {
                 // Nothing to do. Socket has been closed.
                 return SocketState.CLOSED;
             }
 
+            //取出NioChannel通道（理解为Socket）
             S socket = wrapper.getSocket();
 
             // We take complete ownership of the Processor inside of this method to ensure
@@ -879,6 +881,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
                 SocketState state = SocketState.CLOSED;
                 do {
+                    //调用应用层处理器处理，比如Http11Processor进行请求内容的解析
                     state = processor.process(wrapper, status);
 
                     if (state == SocketState.UPGRADING) {

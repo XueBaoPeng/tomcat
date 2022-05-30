@@ -319,6 +319,7 @@ public class CoyoteAdapter implements Adapter {
     }
 
 
+    //todo CoyoteAdapter 需要将Request和Response进行进一步的封装为HttpServletRequest和HttpServletResponse
     @Override
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res)
             throws Exception {
@@ -358,12 +359,14 @@ public class CoyoteAdapter implements Adapter {
         try {
             // Parse and set Catalina and configuration specific
             // request parameters
+            //todo 在这个方法中会根据请求信息找到能够处理当前请求的Host->Context->Wrapper(Servlet)
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
                 //check valves if we support async
                 request.setAsyncSupported(
                         connector.getService().getContainer().getPipeline().isAsyncSupported());
                 // Calling the container
+                //todo 上面匹配出能够处理当前请求的容器之后，就开始一级一级深入，最后取出servlet执行
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
@@ -715,6 +718,7 @@ public class CoyoteAdapter implements Adapter {
 
         while (mapRequired) {
             // This will map the the latest version by default
+            //todo 在这一步会根据请求的URI，匹配出能够处理当前请求的Host->Context->Wrapper->Servlet
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
 

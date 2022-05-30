@@ -249,6 +249,7 @@ public final class Bootstrap {
      */
     public void init() throws Exception {
 
+        //初始化相关类加载器
         initClassLoaders();
 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
@@ -259,6 +260,7 @@ public final class Bootstrap {
         if (log.isDebugEnabled()) {
             log.debug("Loading startup class");
         }
+        //把Catalina类加载上来，并且实例化了一个Catalina对象赋值给startupInstance
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         Object startupInstance = startupClass.getConstructor().newInstance();
 
@@ -271,10 +273,11 @@ public final class Bootstrap {
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
         Object paramValues[] = new Object[1];
         paramValues[0] = sharedLoader;
+        //反射调用Catalina对象的一个方法（setParentClassLoader）
         Method method =
             startupInstance.getClass().getMethod(methodName, paramTypes);
         method.invoke(startupInstance, paramValues);
-
+        //把Catalina对象赋值给catalinaDaemon
         catalinaDaemon = startupInstance;
     }
 
@@ -440,14 +443,17 @@ public final class Bootstrap {
         synchronized (daemonLock) {
             if (daemon == null) {
                 // Don't set daemon until init() has completed
+                //实例化一个当前Bootstrap引导类对象
                 Bootstrap bootstrap = new Bootstrap();
                 try {
+                    //执行当前类方法 init 做一些初始化的动作
                     bootstrap.init();
                 } catch (Throwable t) {
                     handleThrowable(t);
                     t.printStackTrace();
                     return;
                 }
+                //把当前Bootstrap引导类对象赋值给一个变量daemon
                 daemon = bootstrap;
             } else {
                 // When running as a service the call to stop will be on a new
@@ -471,8 +477,11 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
+                //启动Tomcat时传入的是start命令参数，所以走此分支
                 daemon.setAwait(true);
+                //todo 启动时候非常重要的一步 load 加载初始化
                 daemon.load(args);
+                //todo 启动时候非常重要的一步 start 启动
                 daemon.start();
                 if (null == daemon.getServer()) {
                     System.exit(1);

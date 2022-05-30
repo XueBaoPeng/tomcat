@@ -165,6 +165,7 @@ final class StandardWrapperValve extends ValveBase {
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
         // Create the filter chain for this request
+        //todo 为当前请求的处理生成一个过滤器链（在这个链路中核心逻辑要触发Servlet的调用）
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 

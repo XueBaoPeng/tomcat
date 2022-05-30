@@ -893,6 +893,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    //Engine组件的初始化，就是创建一个线程池startStopExecutor，这个线程池在engine组件的start节点使用
     @Override
     protected void initInternal() throws LifecycleException {
         BlockingQueue<Runnable> startStopQueue = new LinkedBlockingQueue<>();

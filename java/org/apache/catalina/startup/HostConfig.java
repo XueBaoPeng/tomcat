@@ -805,6 +805,7 @@ public class HostConfig implements LifecycleListener {
                         }
 
                         // DeployWAR will call removeServiced
+                        //把Context的创建和start以线程池方式提交
                         results.add(es.submit(new DeployWar(this, cn, war)));
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
@@ -1607,6 +1608,7 @@ public class HostConfig implements LifecycleListener {
         }
 
         if (host.getDeployOnStartup()) {
+            //部署webApp
             deployApps();
         }
     }

@@ -1168,17 +1168,21 @@ public abstract class AbstractEndpoint<S,U> {
             if (socketWrapper == null) {
                 return false;
             }
+            //从缓存池中获取一个SocketProcessor处理线程
             SocketProcessorBase<S> sc = null;
             if (processorCache != null) {
                 sc = processorCache.pop();
             }
             if (sc == null) {
+                //缓存池中没有就创建
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
+                //缓存中有就直接用
                 sc.reset(socketWrapper, event);
             }
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
+                //使用线程池技术执行SocketProcessor处理线程
                 executor.execute(sc);
             } else {
                 sc.run();

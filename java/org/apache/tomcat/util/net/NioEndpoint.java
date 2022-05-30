@@ -218,9 +218,11 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 throw new IllegalArgumentException(sm.getString("endpoint.init.bind.inherited"));
             }
         } else {
+            //获取nio通道channel
             serverSock = ServerSocketChannel.open();
             socketProperties.setProperties(serverSock.socket());
             InetSocketAddress addr = new InetSocketAddress(getAddress(), getPortWithOffset());
+           //绑定端口，但是尚未使用accept获取客户端连接
             serverSock.socket().bind(addr,getAcceptCount());
         }
         serverSock.configureBlocking(true); //mimic APR behavior
@@ -737,17 +739,21 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                     continue;
                 }
 
+                //keyCount大于0代表有socket就绪需要被处理，selectedKeys是Nio中就绪通道的集合
                 Iterator<SelectionKey> iterator =
                     keyCount > 0 ? selector.selectedKeys().iterator() : null;
                 // Walk through the collection of ready keys and dispatch
                 // any active event.
+                //将就绪的通道一个个进行处理
                 while (iterator != null && iterator.hasNext()) {
                     SelectionKey sk = iterator.next();
+                    //先移除
                     iterator.remove();
                     NioSocketWrapper socketWrapper = (NioSocketWrapper) sk.attachment();
                     // Attachment may be null if another thread has called
                     // cancelledKey()
                     if (socketWrapper != null) {
+                        //处理
                         processKey(sk, socketWrapper);
                     }
                 }
@@ -759,11 +765,17 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
             getStopLatch().countDown();
         }
 
+        /**
+         * 处理channel 可以理解为处理socket
+         * @param sk
+         * @param socketWrapper
+         */
         protected void processKey(SelectionKey sk, NioSocketWrapper socketWrapper) {
             try {
                 if (close) {
                     cancelledKey(sk, socketWrapper);
                 } else if (sk.isValid()) {
+                    //可读或者可写
                     if (sk.isReadable() || sk.isWritable()) {
                         if (socketWrapper.getSendfileData() != null) {
                             processSendfile(sk, socketWrapper, false);
@@ -771,6 +783,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                             unreg(sk, socketWrapper, sk.readyOps());
                             boolean closeSocket = false;
                             // Read goes before write
+                            //读数据
                             if (sk.isReadable()) {
                                 if (socketWrapper.readOperation != null) {
                                     if (!socketWrapper.readOperation.process()) {
@@ -1653,6 +1666,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
 
             try {
                 int handshake = -1;
+                //判断握手状态
                 try {
                     if (socketWrapper.getSocket().isHandshakeComplete()) {
                         // No TLS handshaking required. Let the handler
@@ -1682,12 +1696,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                 } catch (CancelledKeyException ckx) {
                     handshake = -1;
                 }
+                //确定握手完毕，就可以处理了
                 if (handshake == 0) {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
+                    //处理当前socket中的请求
                     if (event == null) {
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {
+                        //process方法中会获取一个Processor进行（应用层协议）处理
                         state = getHandler().process(socketWrapper, event);
                     }
                     if (state == SocketState.CLOSED) {

@@ -1108,6 +1108,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         try {
+            //protocolHandler组件的初始化，主要是内部Endpoint的初始化
             protocolHandler.init();
         } catch (Exception e) {
             throw new LifecycleException(

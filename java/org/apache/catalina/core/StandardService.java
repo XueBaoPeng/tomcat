@@ -441,6 +441,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
         }
 
+        //todo 初始化Mapper，为后续请求匹配Servlet提供帮助
         mapperListener.start();
 
         // Start our defined Connectors second
@@ -568,6 +569,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 try {
+                    //连接器初始化
                     connector.init();
                 } catch (Exception e) {
                     String message = sm.getString(
